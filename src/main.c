@@ -11,60 +11,28 @@ volatile uint32_t time_var1, time_var2;
 // Private function prototypes
 void Delay(volatile uint32_t nCount);
 void init();
-void calculation_test();
-void dac_test();
 
 int main(void) {
+int iteration = 0;
 	init();
 
-	calculation_test();
-	dac_test();
-
 	for(;;) {
-
+	
+GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		Delay(500);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+		Delay(500);
+		printf("Iteration: %d\r\n", iteration++);
 	}
 
 	return 0;
 }
 
-void dac_test() {
-	for(;;) {
-		for (float i = 0;i < 2.0 * M_PI;i += (2.0 * M_PI) / 100.0) {
-			DAC_SetChannel1Data(DAC_Align_12b_R, (uint32_t)((sinf(i) + 1.0) * 2047.0));
-		}
-	}
-}
-
-void calculation_test() {
-	float a = 1.001;
-	int iteration = 0;
-
-	for(;;) {
-		GPIO_SetBits(GPIOD, GPIO_Pin_12);
-		Delay(500);
-		GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-		Delay(500);
-
-		time_var2 = 0;
-		for (int i = 0;i < 1000000;i++) {
-			a += 0.01 * sqrtf(a);
-		}
-
-		printf("Time:      %lu\n", time_var2);
-		printf("Iteration: %i\n", iteration);
-		printf("Value:     %lu\n", (unsigned long)a);
-//		printf("Value F:   %.5f\n", -a);
-		printf("Value F2:  %s\n\n", ftostr(-a, 5));
-
-		iteration++;
-	}
-}
 
 void init() {
 	GPIO_InitTypeDef  GPIO_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
-	DAC_InitTypeDef  DAC_InitStructure;
-
+	
 	// ---------- SysTick timer -------- //
 	if (SysTick_Config(SystemCoreClock / 1000)) {
 		// Capture error
@@ -112,30 +80,6 @@ void init() {
 	// Enable
 	USART_Cmd(USART2, ENABLE);
 
-
-	// ---------- DAC ---------- //
-
-	// Clock
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_DAC, ENABLE);
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-
-	// Configuration
-	DAC_InitStructure.DAC_Trigger = DAC_Trigger_None;
-	DAC_InitStructure.DAC_WaveGeneration = DAC_WaveGeneration_None;
-	DAC_InitStructure.DAC_OutputBuffer = DAC_OutputBuffer_Disable;
-	DAC_Init(DAC_Channel_1, &DAC_InitStructure);
-
-	// IO
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-	// Enable DAC Channel1
-	DAC_Cmd(DAC_Channel_1, ENABLE);
-
-	// Set DAC Channel1 DHR12L register
-	DAC_SetChannel1Data(DAC_Align_12b_R, 0);
 }
 
 /*

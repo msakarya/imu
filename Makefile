@@ -7,6 +7,8 @@ SRCS = main.c stm32f4xx_it.c system_stm32f4xx.c syscalls.c utils.c
 PROJ_NAME=stm32f4_sample
 OUTPATH=build
 
+OCDFLAGS   = -f board/stm32f4discovery.cfg
+GDBFLAGS   = 
 ###################################################
 
 # Check for valid float argument
@@ -21,11 +23,14 @@ endif
 endif
 
 ###################################################
-
+PREFIX     = arm-none-eabi
 BINPATH=/home/mustafa/install/gcc-arm-none-eabi/bin
 CC=$(BINPATH)/arm-none-eabi-gcc
 OBJCOPY=$(BINPATH)/arm-none-eabi-objcopy
 SIZE=$(BINPATH)/arm-none-eabi-size
+
+GDB        = $(BINPATH)/$(PREFIX)-gdb
+OCD        = openocd
 
 CFLAGS  = -std=gnu99 -g -O2 -Wall -Tstm32_flash.ld
 CFLAGS += -mlittle-endian -mthumb -mthumb-interwork -nostartfiles -mcpu=cortex-m4
@@ -68,6 +73,16 @@ $(OUTPATH)/$(PROJ_NAME).elf: $(SRCS)
 	$(CC) $(CFLAGS) $^ -o $@ -Llib -lstm32f4 -lm
 	$(OBJCOPY) -O ihex $(OUTPATH)/$(PROJ_NAME).elf $(OUTPATH)/$(PROJ_NAME).hex
 	$(OBJCOPY) -O binary $(OUTPATH)/$(PROJ_NAME).elf $(OUTPATH)/$(PROJ_NAME).bin
+
+pr: all
+	openocd -f interface/stlink-v2.cfg -c "set WORKAREASIZE 0x2000" -f target/stm32f4x_stlink.cfg -c "program $(OUTPATH)/$(PROJ_NAME).elf verify reset"
+program: all
+	$(OCD) -c "program $(OUTPATH)/$(PROJ_NAME).elf verify reset" $(OCDFLAGS)
+
+debug:
+	$(GDB) $(OUTPATH)/$(PROJ_NAME).elf -ex "target remote | openocd $(OCDFLAGS) -c 'gdb_port pipe'" \
+		-ex "monitor reset halt" \
+		-ex "load" $(GDBFLAGS) 
 
 clean:
 	rm -f *.o
