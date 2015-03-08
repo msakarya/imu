@@ -4,7 +4,7 @@
 #include <math.h>
 #include "stm32f4xx_conf.h"
 #include "utils.h"
-
+#include "MPU6050.h"
 // Private variables
 volatile uint32_t time_var1, time_var2;
 
@@ -15,7 +15,20 @@ void init();
 int main(void) {
 int iteration = 0;
 	init();
-
+//	MPU6050_I2C_Init();
+//MPU6050_Initialize();
+/*
+if( MPU6050_TestConnection()== TRUE)
+{
+   printf("success");
+}else
+{
+   printf("failed");
+}
+ 
+int16_t  AccelGyro[6]={0};
+MPU6050_GetRawAccelGyro(AccelGyro);
+*/
 	for(;;) {
 	
 GPIO_SetBits(GPIOD, GPIO_Pin_12);
