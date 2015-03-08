@@ -1,13 +1,20 @@
 #include <stdint.h>
 
-typedef struct 
-{
-	float X,Y,Z;
-} XYZ_t;
+#define sx 0
+#define sy 1
+#define sz 2
+#define pitch 0
+#define roll 1
+#define yaw 2
 
+	typedef struct 
+	{
+		float X,Y,Z;
+	} XYZ_t;
+	
 typedef struct 
 {
-	XYZ_t accel,gyro,gyro4[4],gyro_ref,magnet,magnet_tc;
+	float accel[3],gyro[3],gyro4[3][4],gyro_ref[3],magnet[3],magnet_tc[3];
 } Sensor_t;
 
 typedef struct
@@ -17,7 +24,7 @@ typedef struct
 
 typedef struct
 {
-	Head_t accel,gyro,magnet,final;
+	float accel[3],gyro[3],magnet[3],final[3];
 } Heading_t;
 
 

@@ -9,71 +9,79 @@ void accel_head(Sensor_t *s,Heading_t *h)
 	float p=0.0;
 		
 	//  accel pitch
-	payda=sqrt(pow(s->accel.X,2)+pow(s->accel.Z,2)+pow(s->accel.Y,2)); //
+	payda=sqrt(pow(s->accel[sx],2)+pow(s->accel[sz],2)); 
     if(payda<little)	//Prevent zero division error
     	payda=little;
-		p=atan(s->accel.Y/payda);			
 		
-		if ( ( s->accel.Y > 0 ) & ( s->accel.Z > 0 ) )
-			h->accel.Pitch= p;
+		p=(float)180*atan(s->accel[sy]/payda)/pi;			
+		
+		if ( ( s->accel[sy] > 0 ) & ( s->accel[sz] > 0 ) )
+			h->accel[pitch]= p;
 else
-		if ( ( s->accel.Y > 0 ) & ( s->accel.Z < 0 ) )
-			h->accel.Pitch= pi_p5 - p;
+		if ( ( s->accel[sy] > 0 ) & ( s->accel[sz] < 0 ) )
+			h->accel[pitch]= (float)180 - p;
 else
-		if ( ( s->accel.Y < 0 ) & ( s->accel.Z > 0 ) )
-			h->accel.Pitch= p;
+		if ( ( s->accel[sy] < 0 ) & ( s->accel[sz] > 0 ) )
+			h->accel[pitch]= p;
 else
-		if ( ( s->accel.Y < 0 ) & ( s->accel.Z < 0 ) )
-			h->accel.Pitch= -pi_p5-p ;
+		if ( ( s->accel[sy] < 0 ) & ( s->accel[sz] < 0 ) )
+			h->accel[pitch]= -(float)180-p ;
 
-		p=atan(s->accel.X/payda);	
+		//  accel Roll
+	payda=sqrt(pow(s->accel[sy],2)+pow(s->accel[sz],2));
 		
-		if ( ( s->accel.X > 0 ) & ( s->accel.Z > 0 ) )
-			h->accel.Roll= p;
+		p=180.0*atan(s->accel[sx]/payda)/pi;	
+		
+		if ( ( s->accel[sx] > 0 ) & ( s->accel[sz] > 0 ) )
+			h->accel[roll]= p;
 else
-		if ( ( s->accel.X > 0 ) & ( s->accel.Z < 0 ) )
-			h->accel.Roll= pi_p5 - p;
+		if ( ( s->accel[sx] > 0 ) & ( s->accel[sz] < 0 ) )
+			h->accel[roll]= (float)180 - p;
 else
-		if ( ( s->accel.X < 0 ) & ( s->accel.Z > 0 ) )
-			h->accel.Roll= p;
+		if ( ( s->accel[sx] < 0 ) & ( s->accel[sz] > 0 ) )
+			h->accel[roll]= p;
 else
-		if ( ( s->accel.X < 0 ) & ( s->accel.Z < 0 ) )
-			h->accel.Roll= -pi_p5-p ;
-		
-		
-		/*
-    //  accel roll
-    payda=sqrt(pow(s->accel.Y,2)+pow(s->accel.Z,2));
-    if(payda<little)	
-    	payda=little;
-    h->accel.Roll=atan(s->accel.X/payda); 
-		
-		*/
-/*		
-		//  accel yaw		
-		payda=sqrt(pow(s->accel.Y,2)+pow(s->accel.X,2));
-    if(payda<little)	
-    	payda=little;
-    h->accel.Yaw=pi-atan(s->accel.Z/payda);  
-		*/		
-		
-		//  accel yaw		
-		/*		
-    
-    payda=s->accel.Y;
-    if((payda<little)&(payda>-little))	
-    	{
-    	if(payda>0)
-    		payda=little;
-    	else
-    		payda=-little;
-    	}
-			
-    if(s->accel.Y>0) 
-			h->accel.Yaw=pi_p5+atan(s->accel.X/payda);      	         
-    else    
-    	h->accel.Yaw=pi_1p5-atan(-s->accel.X/payda);                
-	*/
-		
+		if ( ( s->accel[sx] < 0 ) & ( s->accel[sz] < 0 ) )
+			h->accel[roll]= -(float)180-p ;
+				
 	}
 
+void reset_gyro(Sensor_t *s,Heading_t *h)
+	{
+	uint8_t i,j;
+	for(i=0;i<3;i++)
+		{
+		s->gyro_ref[i]=0;//s->gyro[i];	
+		for(j=0;j<4;j++)				
+			s->gyro4[i][j]=0;//s->gyro[i];
+		h->gyro[i]=0;//h->accel[i];
+		}	
+	}
+	
+//~~~~~~~~~~~~~~~~  gyro heading calculation  ~~~~~~~~~~~~~~~~~~~~~
+void gyro_head(Sensor_t *s,Heading_t *h)
+	{
+	
+		uint8_t i,j;
+	float Kcf=0.3;//0.03;
+	
+	for(i=0;i<3;i++)
+		{
+			float gi;
+		s->gyro4[i][3]=(s->gyro[i]-s->gyro_ref[i])/2;
+		
+		//average out the last four samples
+		gi=(s->gyro4[i][3]+s->gyro4[i][2]*2+s->gyro4[i][1]*2+s->gyro4[i][0])/6;
+		//10Hz
+		h->gyro[i]=h->gyro[i]+gi*0.1f-(h->gyro[i]-h->accel[i])*Kcf;
+		
+		for(j=0;j<3;j++)
+			s->gyro4[i][j]=s->gyro4[i][j+1];
+		
+		h->final[i]=h->gyro[i];			
+		
+		}
+	
+	}
+
+	

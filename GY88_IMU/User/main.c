@@ -53,15 +53,17 @@ int main(void) {
 	}
 	
 	HMC5883L_Initialize();
-	
+	reset_gyro(&s,&h);
 	while (1) {
 		
-		readSensors(&MPU6050_Data,&s);
-		printSensors(&s);
+		readSensors(&MPU6050_Data,&s);		
 		accel_head(&s,&h);
+		gyro_head(&s,&h);
+		
+		printSensors(&s);
 		printHeading(&h);
 		/* Little delay */
-		Delayms(500);
+		Delayms(100);
 	}
 }
 
@@ -75,17 +77,17 @@ void readSensors(TM_MPU6050_t *MPU6050_Data_ptr, Sensor_t *s){
 		HMC5883L_GetHeading(&MagneticHeading);
 	//Sample sensor data as close as possible
 	
-	s->accel.X=(float)MPU6050_Data_ptr->Accelerometer_X/4096.0; //g
-	s->accel.Y=(float)MPU6050_Data_ptr->Accelerometer_Y/4096.0; //
-	s->accel.Z=(float)MPU6050_Data_ptr->Accelerometer_Z/4096.0+0.18; //
+	s->accel[sx]=(float)MPU6050_Data_ptr->Accelerometer_X;//4096.0f; //g
+	s->accel[sy]=(float)MPU6050_Data_ptr->Accelerometer_Y;//4096.0f; //
+	s->accel[sz]=(float)MPU6050_Data_ptr->Accelerometer_Z+737;//4096.0f+0.18f; //
 	
-	s->gyro.X=(float)MPU6050_Data_ptr->Gyroscope_X;//*0,061035156; //degree per second
-	s->gyro.Y=(float)MPU6050_Data_ptr->Gyroscope_Y;//*0,061035156; 
-	s->gyro.Z=(float)MPU6050_Data_ptr->Gyroscope_Z;//*0,061035156;
+	s->gyro[sx]=(float)MPU6050_Data_ptr->Gyroscope_X*0.061035156f; //degree per second
+	s->gyro[sy]=(float)MPU6050_Data_ptr->Gyroscope_Y*0.061035156f; 
+	s->gyro[sz]=(float)MPU6050_Data_ptr->Gyroscope_Z*0.061035156f;
 	
-	s->magnet.X=(float)MagneticHeading.X;
-	s->magnet.Y=(float)MagneticHeading.Y;
-	s->magnet.Z=(float)MagneticHeading.Z;
+	s->magnet[sx]=(float)MagneticHeading.X;
+	s->magnet[sy]=(float)MagneticHeading.Y;
+	s->magnet[sz]=(float)MagneticHeading.Z;
 	
 }
 
@@ -94,16 +96,16 @@ void printSensors(Sensor_t *s){
 		char str[255];
 	
 			/* Format data */	
-		sprintf(str, "Accelerometer\r\n- X:%5f\r\n- Y:%5f\r\n- Z:%5f\r\nGyroscope\r\n- X:%5f\r\n- Y:%5f\r\n- Z:%5f\r\nMagnetometer\r\n- X:%5f\r\n- Y:%5f\r\n- Z:%5f\r\n\r\n\r\n",
-			s->accel.X,
-			s->accel.Y,
-			s->accel.Z,
-			s->gyro.X,
-			s->gyro.Y,
-			s->gyro.Z,
-			s->magnet.X,
-			s->magnet.Y,
-			s->magnet.Z
+		sprintf(str, "Accelerometer\r\n- X:%5.1f\r\n- Y:%5.1f\r\n- Z:%5.1f\r\nGyroscope\r\n- X:%5.1f\r\n- Y:%5.1f\r\n- Z:%5.1f\r\nMagnetometer\r\n- X:%5.1f\r\n- Y:%5.1f\r\n- Z:%5.1f\r\n\r\n\r\n",
+			s->accel[sx],
+			s->accel[sy],
+			s->accel[sz],
+			s->gyro[sx],
+			s->gyro[sy],
+			s->gyro[sz],
+			s->magnet[sx],
+			s->magnet[sy],
+			s->magnet[sz]
 			
 		);	
 	
@@ -114,15 +116,15 @@ void printHeading(Heading_t *h)
 char str[255];
 	
 			/* Format data */	
-		sprintf(str, "Accel Head\r\n- Pitch:%3.3f\r\n- Roll:%3.3f\r\n- Yaw:%3.3f\r\n\r\n\r\n",
-			180.0*h->accel.Pitch/pi_p5, //180.x/pi -180
-			180.0*h->accel.Roll/pi_p5,
-			h->accel.Yaw
-			
+		sprintf(str, "Accel Head\r\n- Pitch:%3.3f\r\n- Roll:%3.3f\r\nGyro Head\r\n- Pitch:%3.3f\r\n- Roll:%3.3f\r\n\r\n",
+			h->accel[pitch],
+			h->accel[roll],
+			h->gyro[pitch],
+			h->gyro[roll]
 		);	
 	
 	 TM_USART_Puts(USART1,str);
 
-
-
 }
+
+
