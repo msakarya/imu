@@ -29,3 +29,22 @@
 *.hex
 
 build/
+
+
+
+
+*.rar
+
+*.o
+*.d
+*.crf
+*.htm
+*.dep
+*.map
+*.bak
+*.axf
+*.lnp
+*.lst
+*.ini
+
+
